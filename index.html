@@ -13,7 +13,6 @@
     </header>
 
     <main class="content">
-      <!-- ホーム -->
       <section id="screen-home" class="screen active">
         <div class="card">
           <h2>今日の記録</h2>
@@ -34,7 +33,6 @@
         </div>
       </section>
 
-      <!-- カレンダー -->
       <section id="screen-calendar" class="screen">
         <div class="card">
           <div class="calendar-header">
@@ -42,6 +40,7 @@
             <h2 id="calendar-title">2026年4月</h2>
             <button id="next-month-button" class="small-button">→</button>
           </div>
+
           <div class="calendar-weekdays">
             <div>日</div>
             <div>月</div>
@@ -51,7 +50,9 @@
             <div>金</div>
             <div>土</div>
           </div>
+
           <div id="calendar-grid" class="calendar-grid"></div>
+
           <div class="legend">
             <span>🛁 達成</span>
             <span>✕ 失敗</span>
@@ -59,19 +60,33 @@
         </div>
       </section>
 
-      <!-- ごほうび -->
       <section id="screen-reward" class="screen">
         <div class="card">
           <h2>ごほうび交換</h2>
           <p>所持スタンプ: <strong id="reward-stamp-stock">0</strong> 個</p>
-          <p>交換に必要なスタンプ: <strong id="reward-cost-text">10</strong> 個</p>
-          <p>ごほうび名: <strong id="reward-name-text">コンビニスイーツ</strong></p>
-          <button id="exchange-button" class="primary-button">ごほうびに交換する</button>
+
+          <div class="reward-item">
+            <h3 id="reward1-name-text">コンビニスイーツ</h3>
+            <p>必要スタンプ: <strong id="reward1-cost-text">10</strong> 個</p>
+            <button id="exchange-button-1" class="primary-button">これに交換する</button>
+          </div>
+
+          <div class="reward-item">
+            <h3 id="reward2-name-text">カフェドリンク</h3>
+            <p>必要スタンプ: <strong id="reward2-cost-text">20</strong> 個</p>
+            <button id="exchange-button-2" class="primary-button">これに交換する</button>
+          </div>
+
+          <div class="reward-item">
+            <h3 id="reward3-name-text">ちょっと良いごはん</h3>
+            <p>必要スタンプ: <strong id="reward3-cost-text">30</strong> 個</p>
+            <button id="exchange-button-3" class="primary-button">これに交換する</button>
+          </div>
+
           <p id="reward-message" class="message"></p>
         </div>
       </section>
 
-      <!-- 設定 -->
       <section id="screen-settings" class="screen">
         <div class="card">
           <h2>設定</h2>
@@ -82,11 +97,32 @@
           <label for="end-time">終了時刻</label>
           <input type="time" id="end-time" />
 
-          <label for="reward-name">ごほうび名</label>
-          <input type="text" id="reward-name" placeholder="例: コンビニスイーツ" />
+          <hr class="divider" />
 
-          <label for="reward-cost">必要スタンプ数</label>
-          <input type="number" id="reward-cost" min="1" />
+          <label for="reward1-name">ごほうび1の名前</label>
+          <input type="text" id="reward1-name" />
+          <label for="reward1-cost">ごほうび1の必要スタンプ</label>
+          <input type="number" id="reward1-cost" min="1" />
+
+          <label for="reward2-name">ごほうび2の名前</label>
+          <input type="text" id="reward2-name" />
+          <label for="reward2-cost">ごほうび2の必要スタンプ</label>
+          <input type="number" id="reward2-cost" min="1" />
+
+          <label for="reward3-name">ごほうび3の名前</label>
+          <input type="text" id="reward3-name" />
+          <label for="reward3-cost">ごほうび3の必要スタンプ</label>
+          <input type="number" id="reward3-cost" min="1" />
+
+          <hr class="divider" />
+
+          <label for="settings-password">設定変更パスワード</label>
+          <input
+            type="password"
+            id="settings-password"
+            placeholder="パスワードを入力"
+            autocomplete="off"
+          />
 
           <button id="save-settings-button" class="primary-button">保存</button>
           <p id="settings-message" class="message"></p>
