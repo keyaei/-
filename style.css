@@ -60,6 +60,11 @@ body {
   font-size: 20px;
 }
 
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
 label {
   display: block;
   margin-top: 12px;
@@ -69,12 +74,14 @@ label {
 
 input[type="time"],
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+input[type="password"] {
   width: 100%;
   padding: 12px;
   border: 1px solid #d1d5db;
   border-radius: 10px;
   font-size: 16px;
+  background: #fff;
 }
 
 .primary-button,
@@ -110,10 +117,27 @@ input[type="number"] {
   margin-top: 12px;
   font-size: 14px;
   color: #4b5563;
+  white-space: pre-wrap;
 }
 
 .stats p {
   margin: 10px 0;
+}
+
+.reward-item {
+  padding: 14px 0;
+  border-top: 1px solid #eceff3;
+}
+
+.reward-item:first-of-type {
+  border-top: none;
+  padding-top: 8px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #eceff3;
+  margin: 20px 0 12px;
 }
 
 .bottom-nav {
