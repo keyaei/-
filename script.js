@@ -1,4 +1,4 @@
-const STORAGE_KEY = "bath_stamp_app_data_v3";
+const STORAGE_KEY = "bath_stamp_app_data_v4";
 const SETTINGS_PASSWORD = "keyaei1226329";
 
 const defaultData = {
@@ -233,7 +233,17 @@ function getMonthlySuccessDays(year, month) {
   }).length;
 }
 
+function reconcileSpentBaseline() {
+  const totalSuccess = getTotalSuccessDays();
+
+  if (appData.spentBaselineSuccessCount > totalSuccess) {
+    appData.spentBaselineSuccessCount = totalSuccess;
+    saveData();
+  }
+}
+
 function getStampStock() {
+  reconcileSpentBaseline();
   const totalSuccess = getTotalSuccessDays();
   return Math.max(0, totalSuccess - appData.spentBaselineSuccessCount);
 }
@@ -438,6 +448,7 @@ function saveSettings() {
   appData.settings.rewards = rewards;
 
   saveData();
+  reconcileSpentBaseline();
   settingsPasswordInput.value = "";
   settingsMessageEl.textContent = "設定を保存しました。記録済みの日付も新しい時間設定で再判定されます。";
   renderAll();
@@ -457,6 +468,7 @@ function switchScreen(target) {
 }
 
 function renderAll() {
+  reconcileSpentBaseline();
   updateHome();
   renderCalendar();
   updateReward();
