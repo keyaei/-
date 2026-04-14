@@ -76,6 +76,10 @@ const settingsPasswordInput = document.getElementById("settings-password");
 const saveSettingsButton = document.getElementById("save-settings-button");
 const settingsMessageEl = document.getElementById("settings-message");
 
+const rewardModalOverlay = document.getElementById("reward-modal-overlay");
+const rewardModalText = document.getElementById("reward-modal-text");
+const rewardModalClose = document.getElementById("reward-modal-close");
+
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -363,6 +367,15 @@ function updateSettings() {
   });
 }
 
+function openRewardModal(rewardName) {
+  rewardModalText.textContent = `「${rewardName}」と交換しました！`;
+  rewardModalOverlay.classList.remove("hidden");
+}
+
+function closeRewardModal() {
+  rewardModalOverlay.classList.add("hidden");
+}
+
 function exchangeReward(index) {
   const reward = appData.settings.rewards[index];
   const stock = getStampStock();
@@ -374,8 +387,9 @@ function exchangeReward(index) {
 
   appData.spentBaselineSuccessCount = getTotalSuccessDays();
   saveData();
-  rewardMessageEl.textContent = `「${reward.name}」に交換しました。所持スタンプは0になりました。`;
+  rewardMessageEl.textContent = "";
   renderAll();
+  openRewardModal(reward.name);
 }
 
 function saveSettings() {
@@ -472,6 +486,14 @@ prevMonthButton.addEventListener("click", () => {
 nextMonthButton.addEventListener("click", () => {
   calendarDate.setMonth(calendarDate.getMonth() + 1);
   renderCalendar();
+});
+
+rewardModalClose.addEventListener("click", closeRewardModal);
+
+rewardModalOverlay.addEventListener("click", (event) => {
+  if (event.target === rewardModalOverlay) {
+    closeRewardModal();
+  }
 });
 
 setInterval(() => {
