@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>おふろスタンプ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>おふろスタンプ</h1>
+    </header>
+
+    <main class="content">
+      <!-- ホーム -->
+      <section id="screen-home" class="screen active">
+        <div class="card">
+          <h2>今日の記録</h2>
+          <p>判定時間: <span id="time-range-text">20:00 〜 22:30</span></p>
+          <p>現在時刻: <span id="current-time">--:--</span></p>
+          <p>今日の状態: <strong id="today-status-text">未記録</strong></p>
+          <p>記録時刻: <span id="today-recorded-time">-</span></p>
+          <button id="bath-button" class="primary-button">おふろに入った！</button>
+          <p id="home-message" class="message"></p>
+        </div>
+
+        <div class="card stats">
+          <h2>スタンプ情報</h2>
+          <p>所持スタンプ: <strong id="stamp-stock">0</strong> 個</p>
+          <p>累計達成日数: <strong id="total-success-days">0</strong> 日</p>
+          <p>連続達成日数: <strong id="streak-days">0</strong> 日</p>
+          <p>今月の達成数: <strong id="monthly-success-days">0</strong> 日</p>
+        </div>
+      </section>
+
+      <!-- カレンダー -->
+      <section id="screen-calendar" class="screen">
+        <div class="card">
+          <div class="calendar-header">
+            <button id="prev-month-button" class="small-button">←</button>
+            <h2 id="calendar-title">2026年4月</h2>
+            <button id="next-month-button" class="small-button">→</button>
+          </div>
+          <div class="calendar-weekdays">
+            <div>日</div>
+            <div>月</div>
+            <div>火</div>
+            <div>水</div>
+            <div>木</div>
+            <div>金</div>
+            <div>土</div>
+          </div>
+          <div id="calendar-grid" class="calendar-grid"></div>
+          <div class="legend">
+            <span>🛁 達成</span>
+            <span>✕ 失敗</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ごほうび -->
+      <section id="screen-reward" class="screen">
+        <div class="card">
+          <h2>ごほうび交換</h2>
+          <p>所持スタンプ: <strong id="reward-stamp-stock">0</strong> 個</p>
+          <p>交換に必要なスタンプ: <strong id="reward-cost-text">10</strong> 個</p>
+          <p>ごほうび名: <strong id="reward-name-text">コンビニスイーツ</strong></p>
+          <button id="exchange-button" class="primary-button">ごほうびに交換する</button>
+          <p id="reward-message" class="message"></p>
+        </div>
+      </section>
+
+      <!-- 設定 -->
+      <section id="screen-settings" class="screen">
+        <div class="card">
+          <h2>設定</h2>
+
+          <label for="start-time">開始時刻</label>
+          <input type="time" id="start-time" />
+
+          <label for="end-time">終了時刻</label>
+          <input type="time" id="end-time" />
+
+          <label for="reward-name">ごほうび名</label>
+          <input type="text" id="reward-name" placeholder="例: コンビニスイーツ" />
+
+          <label for="reward-cost">必要スタンプ数</label>
+          <input type="number" id="reward-cost" min="1" />
+
+          <button id="save-settings-button" class="primary-button">保存</button>
+          <p id="settings-message" class="message"></p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-button active" data-target="home">ホーム</button>
+      <button class="nav-button" data-target="calendar">カレンダー</button>
+      <button class="nav-button" data-target="reward">ごほうび</button>
+      <button class="nav-button" data-target="settings">設定</button>
+    </nav>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
