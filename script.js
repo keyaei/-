@@ -1,544 +1,291 @@
-const STORAGE_KEY = "bath_stamp_app_data_v5";
-const SETTINGS_PASSWORD = "keyaei1226329";
-
-const defaultData = {
-  settings: {
-    startTime: "20:00",
-    endTime: "22:30",
-    rewards: [
-      { name: "コンビニスイーツ", cost: 10 },
-      { name: "カフェドリンク", cost: 20 },
-      { name: "ちょっと良いごはん", cost: 30 }
-    ]
-  },
-  records: {},
-  spentBaselineSuccessCount: 0
-};
-
-let appData = loadData();
-let calendarDate = new Date();
-
-const screens = document.querySelectorAll(".screen");
-const navButtons = document.querySelectorAll(".nav-button");
-
-const currentTimeEl = document.getElementById("current-time");
-const timeRangeTextEl = document.getElementById("time-range-text");
-const todayStatusTextEl = document.getElementById("today-status-text");
-const todayRecordedTimeEl = document.getElementById("today-recorded-time");
-const bathButton = document.getElementById("bath-button");
-const homeMessageEl = document.getElementById("home-message");
-
-const editRecordArea = document.getElementById("edit-record-area");
-const editRecordTimeInput = document.getElementById("edit-record-time");
-const editRecordPasswordInput = document.getElementById("edit-record-password");
-const updateRecordTimeButton = document.getElementById("update-record-time-button");
-
-const stampStockEl = document.getElementById("stamp-stock");
-const rewardStampStockEl = document.getElementById("reward-stamp-stock");
-const totalSuccessDaysEl = document.getElementById("total-success-days");
-const streakDaysEl = document.getElementById("streak-days");
-const monthlySuccessDaysEl = document.getElementById("monthly-success-days");
-
-const calendarTitleEl = document.getElementById("calendar-title");
-const calendarGridEl = document.getElementById("calendar-grid");
-const prevMonthButton = document.getElementById("prev-month-button");
-const nextMonthButton = document.getElementById("next-month-button");
-
-const rewardNameTextEls = [
-  document.getElementById("reward1-name-text"),
-  document.getElementById("reward2-name-text"),
-  document.getElementById("reward3-name-text")
-];
-const rewardCostTextEls = [
-  document.getElementById("reward1-cost-text"),
-  document.getElementById("reward2-cost-text"),
-  document.getElementById("reward3-cost-text")
-];
-const rewardMessageEl = document.getElementById("reward-message");
-const exchangeButtons = [
-  document.getElementById("exchange-button-1"),
-  document.getElementById("exchange-button-2"),
-  document.getElementById("exchange-button-3")
-];
-
-const startTimeInput = document.getElementById("start-time");
-const endTimeInput = document.getElementById("end-time");
-const rewardNameInputs = [
-  document.getElementById("reward1-name"),
-  document.getElementById("reward2-name"),
-  document.getElementById("reward3-name")
-];
-const rewardCostInputs = [
-  document.getElementById("reward1-cost"),
-  document.getElementById("reward2-cost"),
-  document.getElementById("reward3-cost")
-];
-const settingsPasswordInput = document.getElementById("settings-password");
-const saveSettingsButton = document.getElementById("save-settings-button");
-const settingsMessageEl = document.getElementById("settings-message");
-
-const rewardModalOverlay = document.getElementById("reward-modal-overlay");
-const rewardModalText = document.getElementById("reward-modal-text");
-const rewardModalClose = document.getElementById("reward-modal-close");
-
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
+* {
+  box-sizing: border-box;
 }
 
-function loadData() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return deepClone(defaultData);
-
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      settings: {
-        startTime: parsed.settings?.startTime || defaultData.settings.startTime,
-        endTime: parsed.settings?.endTime || defaultData.settings.endTime,
-        rewards: normalizeRewards(parsed.settings?.rewards)
-      },
-      records: parsed.records || {},
-      spentBaselineSuccessCount: Number.isInteger(parsed.spentBaselineSuccessCount)
-        ? parsed.spentBaselineSuccessCount
-        : 0
-    };
-  } catch {
-    return deepClone(defaultData);
-  }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  background: #f6f7fb;
+  color: #333;
 }
 
-function normalizeRewards(rewards) {
-  const fallback = deepClone(defaultData.settings.rewards);
-
-  if (!Array.isArray(rewards) || rewards.length < 3) {
-    return fallback;
-  }
-
-  return rewards.slice(0, 3).map((reward, index) => ({
-    name: typeof reward?.name === "string" && reward.name.trim()
-      ? reward.name.trim()
-      : fallback[index].name,
-    cost: Number.isInteger(Number(reward?.cost)) && Number(reward.cost) > 0
-      ? Number(reward.cost)
-      : fallback[index].cost
-  }));
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #f6f7fb;
+  display: flex;
+  flex-direction: column;
 }
 
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+.app-header {
+  padding: 20px 16px 12px;
+  text-align: center;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-function pad2(value) {
-  return String(value).padStart(2, "0");
+.app-header h1 {
+  margin: 0;
+  font-size: 24px;
 }
 
-function formatDateKey(date) {
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+.content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 90px;
 }
 
-function getTodayKey() {
-  return formatDateKey(new Date());
+.screen {
+  display: none;
 }
 
-function getCurrentTimeString() {
-  const now = new Date();
-  return `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+.screen.active {
+  display: block;
 }
 
-function timeToMinutes(timeStr) {
-  const [hour, minute] = timeStr.split(":").map(Number);
-  return hour * 60 + minute;
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-function compareDateKeys(a, b) {
-  if (a === b) return 0;
-  return a < b ? -1 : 1;
+.card h2 {
+  margin-top: 0;
+  font-size: 20px;
 }
 
-function getRecordForDate(dateKey) {
-  return appData.records[dateKey] || null;
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
 }
 
-function getStatusFromRecordedAt(recordedAt) {
-  const recordedMinutes = timeToMinutes(recordedAt);
-  const startMinutes = timeToMinutes(appData.settings.startTime);
-  const endMinutes = timeToMinutes(appData.settings.endTime);
-
-  return recordedMinutes >= startMinutes && recordedMinutes <= endMinutes
-    ? "success"
-    : "failure";
+label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 
-function getDateStatus(dateKey) {
-  const todayKey = getTodayKey();
-  const record = getRecordForDate(dateKey);
-
-  if (record?.recordedAt) {
-    return getStatusFromRecordedAt(record.recordedAt);
-  }
-
-  if (compareDateKeys(dateKey, todayKey) < 0) {
-    return "failure";
-  }
-
-  if (dateKey === todayKey) {
-    const nowMinutes = timeToMinutes(getCurrentTimeString());
-    const endMinutes = timeToMinutes(appData.settings.endTime);
-
-    if (nowMinutes > endMinutes) {
-      return "failure";
-    }
-  }
-
-  return "pending";
+input[type="time"],
+input[type="text"],
+input[type="number"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 16px;
+  background: #fff;
 }
 
-function getTodayRecord() {
-  return getRecordForDate(getTodayKey());
+.primary-button,
+.secondary-button,
+.small-button,
+.nav-button {
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
-function getAllRecordedDateKeys() {
-  return Object.keys(appData.records).sort();
+.primary-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background: #4f46e5;
+  color: white;
+  font-weight: 700;
 }
 
-function getTotalSuccessDays() {
-  return getAllRecordedDateKeys().filter((dateKey) => getDateStatus(dateKey) === "success").length;
+.secondary-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
 }
 
-function getMonthlySuccessDays(year, month) {
-  return getAllRecordedDateKeys().filter((dateKey) => {
-    if (getDateStatus(dateKey) !== "success") return false;
-    const [y, m] = dateKey.split("-").map(Number);
-    return y === year && m === month;
-  }).length;
+.primary-button:disabled,
+.secondary-button:disabled {
+  background: #cbd5e1;
+  color: #6b7280;
+  cursor: not-allowed;
 }
 
-function reconcileSpentBaseline() {
-  const totalSuccess = getTotalSuccessDays();
-  if (appData.spentBaselineSuccessCount > totalSuccess) {
-    appData.spentBaselineSuccessCount = totalSuccess;
-    saveData();
-  }
+.small-button {
+  padding: 8px 12px;
+  background: #e5e7eb;
 }
 
-function getStampStock() {
-  reconcileSpentBaseline();
-  return Math.max(0, getTotalSuccessDays() - appData.spentBaselineSuccessCount);
+.message {
+  min-height: 24px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #4b5563;
+  white-space: pre-wrap;
 }
 
-function getStreakDays() {
-  let streak = 0;
-  const today = new Date();
-
-  for (let i = 0; i < 3650; i++) {
-    const checkDate = new Date(today);
-    checkDate.setDate(today.getDate() - i);
-    const key = formatDateKey(checkDate);
-    const status = getDateStatus(key);
-
-    if (status === "success") {
-      streak += 1;
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+.stats p {
+  margin: 10px 0;
 }
 
-function recordBath() {
-  const todayKey = getTodayKey();
-
-  if (appData.records[todayKey]) {
-    homeMessageEl.textContent = "今日はすでに記録済みです。下で登録時間を修正できます。";
-    return;
-  }
-
-  appData.records[todayKey] = {
-    recordedAt: getCurrentTimeString()
-  };
-
-  saveData();
-  homeMessageEl.textContent = "記録しました。";
-  renderAll();
+.reward-item {
+  padding: 14px 0;
+  border-top: 1px solid #eceff3;
 }
 
-function updateTodayRecordTime() {
-  const todayKey = getTodayKey();
-  const todayRecord = getTodayRecord();
-  const newTime = editRecordTimeInput.value;
-  const password = editRecordPasswordInput.value;
-
-  if (!todayRecord) {
-    homeMessageEl.textContent = "今日はまだ記録がありません。";
-    return;
-  }
-
-  if (password !== SETTINGS_PASSWORD) {
-    homeMessageEl.textContent = "修正用パスワードが違います。";
-    editRecordPasswordInput.value = "";
-    return;
-  }
-
-  if (!newTime) {
-    homeMessageEl.textContent = "修正する時間を入力してください。";
-    return;
-  }
-
-  appData.records[todayKey].recordedAt = newTime;
-  saveData();
-
-  editRecordPasswordInput.value = "";
-  homeMessageEl.textContent = `登録時間を ${newTime} に修正しました。`;
-  renderAll();
+.reward-item:first-of-type {
+  border-top: none;
+  padding-top: 8px;
 }
 
-function updateHome() {
-  const currentTime = getCurrentTimeString();
-  const todayKey = getTodayKey();
-  const todayRecord = getTodayRecord();
-  const todayStatus = getDateStatus(todayKey);
-
-  currentTimeEl.textContent = currentTime;
-  timeRangeTextEl.textContent = `${appData.settings.startTime} 〜 ${appData.settings.endTime}`;
-
-  if (!todayRecord) {
-    todayRecordedTimeEl.textContent = "-";
-    bathButton.disabled = false;
-    editRecordArea.classList.add("hidden");
-    editRecordTimeInput.value = "";
-  } else {
-    todayRecordedTimeEl.textContent = todayRecord.recordedAt;
-    bathButton.disabled = true;
-    editRecordArea.classList.remove("hidden");
-    editRecordTimeInput.value = todayRecord.recordedAt;
-  }
-
-  if (todayStatus === "success") {
-    todayStatusTextEl.textContent = "達成 🛁";
-  } else if (todayStatus === "failure") {
-    todayStatusTextEl.textContent = "失敗 ✕";
-  } else {
-    todayStatusTextEl.textContent = "未記録";
-  }
-
-  stampStockEl.textContent = getStampStock();
-  totalSuccessDaysEl.textContent = getTotalSuccessDays();
-  streakDaysEl.textContent = getStreakDays();
-
-  const now = new Date();
-  monthlySuccessDaysEl.textContent = getMonthlySuccessDays(
-    now.getFullYear(),
-    now.getMonth() + 1
-  );
+.divider {
+  border: none;
+  border-top: 1px solid #eceff3;
+  margin: 20px 0 12px;
 }
 
-function renderCalendar() {
-  const year = calendarDate.getFullYear();
-  const month = calendarDate.getMonth();
-
-  calendarTitleEl.textContent = `${year}年${month + 1}月`;
-  calendarGridEl.innerHTML = "";
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startWeekday = firstDay.getDay();
-  const daysInMonth = lastDay.getDate();
-  const todayKey = getTodayKey();
-
-  for (let i = 0; i < startWeekday; i++) {
-    const emptyCell = document.createElement("div");
-    emptyCell.className = "calendar-cell empty";
-    calendarGridEl.appendChild(emptyCell);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dateKey = formatDateKey(date);
-    const status = getDateStatus(dateKey);
-
-    const cell = document.createElement("div");
-    cell.className = "calendar-cell";
-
-    if (dateKey === todayKey) {
-      cell.classList.add("today");
-    }
-
-    const dayEl = document.createElement("div");
-    dayEl.className = "calendar-day";
-    dayEl.textContent = day;
-
-    const markEl = document.createElement("div");
-    markEl.className = "calendar-mark";
-
-    if (status === "success") {
-      markEl.textContent = "🛁";
-    } else if (status === "failure") {
-      markEl.textContent = "✕";
-    } else {
-      markEl.textContent = "";
-    }
-
-    cell.appendChild(dayEl);
-    cell.appendChild(markEl);
-    calendarGridEl.appendChild(cell);
-  }
+.edit-record-area {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #eceff3;
 }
 
-function updateReward() {
-  const stock = getStampStock();
-  rewardStampStockEl.textContent = stock;
-
-  appData.settings.rewards.forEach((reward, index) => {
-    rewardNameTextEls[index].textContent = reward.name;
-    rewardCostTextEls[index].textContent = reward.cost;
-    exchangeButtons[index].disabled = stock < reward.cost;
-  });
+.hidden {
+  display: none !important;
 }
 
-function updateSettings() {
-  startTimeInput.value = appData.settings.startTime;
-  endTimeInput.value = appData.settings.endTime;
-
-  appData.settings.rewards.forEach((reward, index) => {
-    rewardNameInputs[index].value = reward.name;
-    rewardCostInputs[index].value = reward.cost;
-  });
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 8px;
 }
 
-function openRewardModal(rewardName) {
-  rewardModalText.textContent = `「${rewardName}」と交換しました！`;
-  rewardModalOverlay.classList.remove("hidden");
+.nav-button {
+  background: transparent;
+  padding: 10px 4px;
+  font-size: 14px;
+  color: #6b7280;
 }
 
-function closeRewardModal() {
-  rewardModalOverlay.classList.add("hidden");
+.nav-button.active {
+  color: #4f46e5;
+  font-weight: 700;
 }
 
-function exchangeReward(index) {
-  const reward = appData.settings.rewards[index];
-  const stock = getStampStock();
-
-  if (stock < reward.cost) {
-    rewardMessageEl.textContent = "スタンプが足りません。";
-    return;
-  }
-
-  appData.spentBaselineSuccessCount = getTotalSuccessDays();
-  saveData();
-  rewardMessageEl.textContent = "";
-  renderAll();
-  openRewardModal(reward.name);
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-function saveSettings() {
-  const password = settingsPasswordInput.value;
-
-  if (password !== SETTINGS_PASSWORD) {
-    settingsMessageEl.textContent = "パスワードが違います。";
-    settingsPasswordInput.value = "";
-    return;
-  }
-
-  const startTime = startTimeInput.value;
-  const endTime = endTimeInput.value;
-
-  if (!startTime || !endTime) {
-    settingsMessageEl.textContent = "開始時刻と終了時刻を入力してください。";
-    return;
-  }
-
-  if (timeToMinutes(startTime) > timeToMinutes(endTime)) {
-    settingsMessageEl.textContent = "開始時刻は終了時刻より前にしてください。";
-    return;
-  }
-
-  const rewards = [];
-
-  for (let i = 0; i < 3; i++) {
-    const name = rewardNameInputs[i].value.trim();
-    const cost = Number(rewardCostInputs[i].value);
-
-    if (!name) {
-      settingsMessageEl.textContent = `ごほうび${i + 1}の名前を入力してください。`;
-      return;
-    }
-
-    if (!Number.isInteger(cost) || cost < 1) {
-      settingsMessageEl.textContent = `ごほうび${i + 1}の必要スタンプ数は1以上の整数にしてください。`;
-      return;
-    }
-
-    rewards.push({ name, cost });
-  }
-
-  appData.settings.startTime = startTime;
-  appData.settings.endTime = endTime;
-  appData.settings.rewards = rewards;
-
-  saveData();
-  reconcileSpentBaseline();
-  settingsPasswordInput.value = "";
-  settingsMessageEl.textContent = "設定を保存しました。";
-  renderAll();
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
 }
 
-function switchScreen(target) {
-  screens.forEach((screen) => {
-    screen.classList.remove("active");
-  });
-
-  navButtons.forEach((button) => {
-    button.classList.remove("active");
-  });
-
-  document.getElementById(`screen-${target}`).classList.add("active");
-  document.querySelector(`.nav-button[data-target="${target}"]`).classList.add("active");
+.calendar-weekdays {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 700;
+  color: #6b7280;
 }
 
-function renderAll() {
-  reconcileSpentBaseline();
-  updateHome();
-  renderCalendar();
-  updateReward();
-  updateSettings();
+.calendar-cell {
+  background: #f9fafb;
+  border-radius: 10px;
+  min-height: 68px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  border: 1px solid #eceff3;
 }
 
-bathButton.addEventListener("click", recordBath);
-updateRecordTimeButton.addEventListener("click", updateTodayRecordTime);
-saveSettingsButton.addEventListener("click", saveSettings);
+.calendar-cell.empty {
+  background: transparent;
+  border: none;
+}
 
-exchangeButtons.forEach((button, index) => {
-  button.addEventListener("click", () => exchangeReward(index));
-});
+.calendar-day {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
 
-navButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    switchScreen(button.dataset.target);
-  });
-});
+.calendar-mark {
+  font-size: 20px;
+  line-height: 1;
+}
 
-prevMonthButton.addEventListener("click", () => {
-  calendarDate.setMonth(calendarDate.getMonth() - 1);
-  renderCalendar();
-});
+.calendar-cell.today {
+  border: 2px solid #4f46e5;
+}
 
-nextMonthButton.addEventListener("click", () => {
-  calendarDate.setMonth(calendarDate.getMonth() + 1);
-  renderCalendar();
-});
+.legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #4b5563;
+}
 
-rewardModalClose.addEventListener("click", closeRewardModal);
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
 
-rewardModalOverlay.addEventListener("click", (event) => {
-  if (event.target === rewardModalOverlay) {
-    closeRewardModal();
-  }
-});
+.modal-overlay.hidden {
+  display: none;
+}
 
-setInterval(() => {
-  renderAll();
-}, 30000);
+.modal-card {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
 
-renderAll();
-switchScreen("home");
+.modal-card h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+
+.modal-card p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.modal-button {
+  margin-top: 20px;
+}
