@@ -85,6 +85,7 @@ input[type="password"] {
 }
 
 .primary-button,
+.secondary-button,
 .small-button,
 .nav-button {
   border: none;
@@ -102,8 +103,19 @@ input[type="password"] {
   font-weight: 700;
 }
 
-.primary-button:disabled {
-  background: #a5b4fc;
+.secondary-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  background: #cbd5e1;
+  color: #6b7280;
   cursor: not-allowed;
 }
 
@@ -138,6 +150,16 @@ input[type="password"] {
   border: none;
   border-top: 1px solid #eceff3;
   margin: 20px 0 12px;
+}
+
+.edit-record-area {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #eceff3;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .bottom-nav {
