@@ -61,6 +61,7 @@
           <div class="legend">
             <span>🛁 達成</span>
             <span>✕ 失敗</span>
+            <span>日付タップで修正</span>
           </div>
         </div>
       </section>
@@ -153,7 +154,8 @@
 
   <div id="edit-modal-overlay" class="modal-overlay hidden">
     <div class="modal-card">
-      <h2>登録時間を修正</h2>
+      <h2 id="edit-modal-title">登録時間を修正</h2>
+      <p id="edit-modal-date-text" class="modal-subtext">2026-05-13</p>
 
       <label for="edit-record-time">登録時間</label>
       <input type="time" id="edit-record-time" />
@@ -167,7 +169,10 @@
       />
 
       <button id="update-record-time-button" class="primary-button modal-button" type="button">
-        更新する
+        保存する
+      </button>
+      <button id="delete-record-button" class="danger-button modal-sub-button" type="button">
+        記録を削除する
       </button>
       <button id="close-edit-modal-button" class="secondary-button modal-sub-button" type="button">
         とじる
