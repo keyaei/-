@@ -1,170 +1,544 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>おふろスタンプ</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="app">
-    <header class="app-header">
-      <h1>おふろスタンプ</h1>
-    </header>
+const STORAGE_KEY = "bath_stamp_app_data_v5";
+const SETTINGS_PASSWORD = "keyaei1226329";
 
-    <main class="content">
-      <section id="screen-home" class="screen active">
-        <div class="card">
-          <h2>今日の記録</h2>
-          <p>判定時間: <span id="time-range-text">20:00 〜 22:30</span></p>
-          <p>現在時刻: <span id="current-time">--:--</span></p>
-          <p>今日の状態: <strong id="today-status-text">未記録</strong></p>
-          <p>記録時刻: <span id="today-recorded-time">-</span></p>
+const defaultData = {
+  settings: {
+    startTime: "20:00",
+    endTime: "22:30",
+    rewards: [
+      { name: "コンビニスイーツ", cost: 10 },
+      { name: "カフェドリンク", cost: 20 },
+      { name: "ちょっと良いごはん", cost: 30 }
+    ]
+  },
+  records: {},
+  spentBaselineSuccessCount: 0
+};
 
-          <button id="bath-button" class="primary-button">おふろに入った！</button>
+let appData = loadData();
+let calendarDate = new Date();
 
-          <div id="edit-record-area" class="edit-record-area hidden">
-            <label for="edit-record-time">登録時間を修正</label>
-            <input type="time" id="edit-record-time" />
+const screens = document.querySelectorAll(".screen");
+const navButtons = document.querySelectorAll(".nav-button");
 
-            <label for="edit-record-password">修正用パスワード</label>
-            <input
-              type="password"
-              id="edit-record-password"
-              placeholder="パスワードを入力"
-              autocomplete="off"
-            />
+const currentTimeEl = document.getElementById("current-time");
+const timeRangeTextEl = document.getElementById("time-range-text");
+const todayStatusTextEl = document.getElementById("today-status-text");
+const todayRecordedTimeEl = document.getElementById("today-recorded-time");
+const bathButton = document.getElementById("bath-button");
+const homeMessageEl = document.getElementById("home-message");
 
-            <button id="update-record-time-button" class="secondary-button">
-              登録時間を更新する
-            </button>
-          </div>
+const editRecordArea = document.getElementById("edit-record-area");
+const editRecordTimeInput = document.getElementById("edit-record-time");
+const editRecordPasswordInput = document.getElementById("edit-record-password");
+const updateRecordTimeButton = document.getElementById("update-record-time-button");
 
-          <p id="home-message" class="message"></p>
-        </div>
+const stampStockEl = document.getElementById("stamp-stock");
+const rewardStampStockEl = document.getElementById("reward-stamp-stock");
+const totalSuccessDaysEl = document.getElementById("total-success-days");
+const streakDaysEl = document.getElementById("streak-days");
+const monthlySuccessDaysEl = document.getElementById("monthly-success-days");
 
-        <div class="card stats">
-          <h2>スタンプ情報</h2>
-          <p>所持スタンプ: <strong id="stamp-stock">0</strong> 個</p>
-          <p>累計達成日数: <strong id="total-success-days">0</strong> 日</p>
-          <p>連続達成日数: <strong id="streak-days">0</strong> 日</p>
-          <p>今月の達成数: <strong id="monthly-success-days">0</strong> 日</p>
-        </div>
-      </section>
+const calendarTitleEl = document.getElementById("calendar-title");
+const calendarGridEl = document.getElementById("calendar-grid");
+const prevMonthButton = document.getElementById("prev-month-button");
+const nextMonthButton = document.getElementById("next-month-button");
 
-      <section id="screen-calendar" class="screen">
-        <div class="card">
-          <div class="calendar-header">
-            <button id="prev-month-button" class="small-button">←</button>
-            <h2 id="calendar-title">2026年4月</h2>
-            <button id="next-month-button" class="small-button">→</button>
-          </div>
+const rewardNameTextEls = [
+  document.getElementById("reward1-name-text"),
+  document.getElementById("reward2-name-text"),
+  document.getElementById("reward3-name-text")
+];
+const rewardCostTextEls = [
+  document.getElementById("reward1-cost-text"),
+  document.getElementById("reward2-cost-text"),
+  document.getElementById("reward3-cost-text")
+];
+const rewardMessageEl = document.getElementById("reward-message");
+const exchangeButtons = [
+  document.getElementById("exchange-button-1"),
+  document.getElementById("exchange-button-2"),
+  document.getElementById("exchange-button-3")
+];
 
-          <div class="calendar-weekdays">
-            <div>日</div>
-            <div>月</div>
-            <div>火</div>
-            <div>水</div>
-            <div>木</div>
-            <div>金</div>
-            <div>土</div>
-          </div>
+const startTimeInput = document.getElementById("start-time");
+const endTimeInput = document.getElementById("end-time");
+const rewardNameInputs = [
+  document.getElementById("reward1-name"),
+  document.getElementById("reward2-name"),
+  document.getElementById("reward3-name")
+];
+const rewardCostInputs = [
+  document.getElementById("reward1-cost"),
+  document.getElementById("reward2-cost"),
+  document.getElementById("reward3-cost")
+];
+const settingsPasswordInput = document.getElementById("settings-password");
+const saveSettingsButton = document.getElementById("save-settings-button");
+const settingsMessageEl = document.getElementById("settings-message");
 
-          <div id="calendar-grid" class="calendar-grid"></div>
+const rewardModalOverlay = document.getElementById("reward-modal-overlay");
+const rewardModalText = document.getElementById("reward-modal-text");
+const rewardModalClose = document.getElementById("reward-modal-close");
 
-          <div class="legend">
-            <span>🛁 達成</span>
-            <span>✕ 失敗</span>
-          </div>
-        </div>
-      </section>
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
 
-      <section id="screen-reward" class="screen">
-        <div class="card">
-          <h2>ごほうび交換</h2>
-          <p>所持スタンプ: <strong id="reward-stamp-stock">0</strong> 個</p>
+function loadData() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return deepClone(defaultData);
 
-          <div class="reward-item">
-            <h3 id="reward1-name-text">コンビニスイーツ</h3>
-            <p>必要スタンプ: <strong id="reward1-cost-text">10</strong> 個</p>
-            <button id="exchange-button-1" class="primary-button">これに交換する</button>
-          </div>
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      settings: {
+        startTime: parsed.settings?.startTime || defaultData.settings.startTime,
+        endTime: parsed.settings?.endTime || defaultData.settings.endTime,
+        rewards: normalizeRewards(parsed.settings?.rewards)
+      },
+      records: parsed.records || {},
+      spentBaselineSuccessCount: Number.isInteger(parsed.spentBaselineSuccessCount)
+        ? parsed.spentBaselineSuccessCount
+        : 0
+    };
+  } catch {
+    return deepClone(defaultData);
+  }
+}
 
-          <div class="reward-item">
-            <h3 id="reward2-name-text">カフェドリンク</h3>
-            <p>必要スタンプ: <strong id="reward2-cost-text">20</strong> 個</p>
-            <button id="exchange-button-2" class="primary-button">これに交換する</button>
-          </div>
+function normalizeRewards(rewards) {
+  const fallback = deepClone(defaultData.settings.rewards);
 
-          <div class="reward-item">
-            <h3 id="reward3-name-text">ちょっと良いごはん</h3>
-            <p>必要スタンプ: <strong id="reward3-cost-text">30</strong> 個</p>
-            <button id="exchange-button-3" class="primary-button">これに交換する</button>
-          </div>
+  if (!Array.isArray(rewards) || rewards.length < 3) {
+    return fallback;
+  }
 
-          <p id="reward-message" class="message"></p>
-        </div>
-      </section>
+  return rewards.slice(0, 3).map((reward, index) => ({
+    name: typeof reward?.name === "string" && reward.name.trim()
+      ? reward.name.trim()
+      : fallback[index].name,
+    cost: Number.isInteger(Number(reward?.cost)) && Number(reward.cost) > 0
+      ? Number(reward.cost)
+      : fallback[index].cost
+  }));
+}
 
-      <section id="screen-settings" class="screen">
-        <div class="card">
-          <h2>設定</h2>
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+}
 
-          <label for="start-time">開始時刻</label>
-          <input type="time" id="start-time" />
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
 
-          <label for="end-time">終了時刻</label>
-          <input type="time" id="end-time" />
+function formatDateKey(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
 
-          <hr class="divider" />
+function getTodayKey() {
+  return formatDateKey(new Date());
+}
 
-          <label for="reward1-name">ごほうび1の名前</label>
-          <input type="text" id="reward1-name" />
-          <label for="reward1-cost">ごほうび1の必要スタンプ</label>
-          <input type="number" id="reward1-cost" min="1" />
+function getCurrentTimeString() {
+  const now = new Date();
+  return `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+}
 
-          <label for="reward2-name">ごほうび2の名前</label>
-          <input type="text" id="reward2-name" />
-          <label for="reward2-cost">ごほうび2の必要スタンプ</label>
-          <input type="number" id="reward2-cost" min="1" />
+function timeToMinutes(timeStr) {
+  const [hour, minute] = timeStr.split(":").map(Number);
+  return hour * 60 + minute;
+}
 
-          <label for="reward3-name">ごほうび3の名前</label>
-          <input type="text" id="reward3-name" />
-          <label for="reward3-cost">ごほうび3の必要スタンプ</label>
-          <input type="number" id="reward3-cost" min="1" />
+function compareDateKeys(a, b) {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
 
-          <hr class="divider" />
+function getRecordForDate(dateKey) {
+  return appData.records[dateKey] || null;
+}
 
-          <label for="settings-password">設定変更パスワード</label>
-          <input
-            type="password"
-            id="settings-password"
-            placeholder="パスワードを入力"
-            autocomplete="off"
-          />
+function getStatusFromRecordedAt(recordedAt) {
+  const recordedMinutes = timeToMinutes(recordedAt);
+  const startMinutes = timeToMinutes(appData.settings.startTime);
+  const endMinutes = timeToMinutes(appData.settings.endTime);
 
-          <button id="save-settings-button" class="primary-button">保存</button>
-          <p id="settings-message" class="message"></p>
-        </div>
-      </section>
-    </main>
+  return recordedMinutes >= startMinutes && recordedMinutes <= endMinutes
+    ? "success"
+    : "failure";
+}
 
-    <nav class="bottom-nav">
-      <button class="nav-button active" data-target="home">ホーム</button>
-      <button class="nav-button" data-target="calendar">カレンダー</button>
-      <button class="nav-button" data-target="reward">ごほうび</button>
-      <button class="nav-button" data-target="settings">設定</button>
-    </nav>
-  </div>
+function getDateStatus(dateKey) {
+  const todayKey = getTodayKey();
+  const record = getRecordForDate(dateKey);
 
-  <div id="reward-modal-overlay" class="modal-overlay hidden">
-    <div class="modal-card">
-      <h2>交換完了！</h2>
-      <p id="reward-modal-text">「コンビニスイーツ」と交換しました！</p>
-      <button id="reward-modal-close" class="primary-button modal-button">OK</button>
-    </div>
-  </div>
+  if (record?.recordedAt) {
+    return getStatusFromRecordedAt(record.recordedAt);
+  }
 
-  <script src="script.js"></script>
-</body>
-</html>
+  if (compareDateKeys(dateKey, todayKey) < 0) {
+    return "failure";
+  }
+
+  if (dateKey === todayKey) {
+    const nowMinutes = timeToMinutes(getCurrentTimeString());
+    const endMinutes = timeToMinutes(appData.settings.endTime);
+
+    if (nowMinutes > endMinutes) {
+      return "failure";
+    }
+  }
+
+  return "pending";
+}
+
+function getTodayRecord() {
+  return getRecordForDate(getTodayKey());
+}
+
+function getAllRecordedDateKeys() {
+  return Object.keys(appData.records).sort();
+}
+
+function getTotalSuccessDays() {
+  return getAllRecordedDateKeys().filter((dateKey) => getDateStatus(dateKey) === "success").length;
+}
+
+function getMonthlySuccessDays(year, month) {
+  return getAllRecordedDateKeys().filter((dateKey) => {
+    if (getDateStatus(dateKey) !== "success") return false;
+    const [y, m] = dateKey.split("-").map(Number);
+    return y === year && m === month;
+  }).length;
+}
+
+function reconcileSpentBaseline() {
+  const totalSuccess = getTotalSuccessDays();
+  if (appData.spentBaselineSuccessCount > totalSuccess) {
+    appData.spentBaselineSuccessCount = totalSuccess;
+    saveData();
+  }
+}
+
+function getStampStock() {
+  reconcileSpentBaseline();
+  return Math.max(0, getTotalSuccessDays() - appData.spentBaselineSuccessCount);
+}
+
+function getStreakDays() {
+  let streak = 0;
+  const today = new Date();
+
+  for (let i = 0; i < 3650; i++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() - i);
+    const key = formatDateKey(checkDate);
+    const status = getDateStatus(key);
+
+    if (status === "success") {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function recordBath() {
+  const todayKey = getTodayKey();
+
+  if (appData.records[todayKey]) {
+    homeMessageEl.textContent = "今日はすでに記録済みです。下で登録時間を修正できます。";
+    return;
+  }
+
+  appData.records[todayKey] = {
+    recordedAt: getCurrentTimeString()
+  };
+
+  saveData();
+  homeMessageEl.textContent = "記録しました。";
+  renderAll();
+}
+
+function updateTodayRecordTime() {
+  const todayKey = getTodayKey();
+  const todayRecord = getTodayRecord();
+  const newTime = editRecordTimeInput.value;
+  const password = editRecordPasswordInput.value;
+
+  if (!todayRecord) {
+    homeMessageEl.textContent = "今日はまだ記録がありません。";
+    return;
+  }
+
+  if (password !== SETTINGS_PASSWORD) {
+    homeMessageEl.textContent = "修正用パスワードが違います。";
+    editRecordPasswordInput.value = "";
+    return;
+  }
+
+  if (!newTime) {
+    homeMessageEl.textContent = "修正する時間を入力してください。";
+    return;
+  }
+
+  appData.records[todayKey].recordedAt = newTime;
+  saveData();
+
+  editRecordPasswordInput.value = "";
+  homeMessageEl.textContent = `登録時間を ${newTime} に修正しました。`;
+  renderAll();
+}
+
+function updateHome() {
+  const currentTime = getCurrentTimeString();
+  const todayKey = getTodayKey();
+  const todayRecord = getTodayRecord();
+  const todayStatus = getDateStatus(todayKey);
+
+  currentTimeEl.textContent = currentTime;
+  timeRangeTextEl.textContent = `${appData.settings.startTime} 〜 ${appData.settings.endTime}`;
+
+  if (!todayRecord) {
+    todayRecordedTimeEl.textContent = "-";
+    bathButton.disabled = false;
+    editRecordArea.classList.add("hidden");
+    editRecordTimeInput.value = "";
+  } else {
+    todayRecordedTimeEl.textContent = todayRecord.recordedAt;
+    bathButton.disabled = true;
+    editRecordArea.classList.remove("hidden");
+    editRecordTimeInput.value = todayRecord.recordedAt;
+  }
+
+  if (todayStatus === "success") {
+    todayStatusTextEl.textContent = "達成 🛁";
+  } else if (todayStatus === "failure") {
+    todayStatusTextEl.textContent = "失敗 ✕";
+  } else {
+    todayStatusTextEl.textContent = "未記録";
+  }
+
+  stampStockEl.textContent = getStampStock();
+  totalSuccessDaysEl.textContent = getTotalSuccessDays();
+  streakDaysEl.textContent = getStreakDays();
+
+  const now = new Date();
+  monthlySuccessDaysEl.textContent = getMonthlySuccessDays(
+    now.getFullYear(),
+    now.getMonth() + 1
+  );
+}
+
+function renderCalendar() {
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+
+  calendarTitleEl.textContent = `${year}年${month + 1}月`;
+  calendarGridEl.innerHTML = "";
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  const todayKey = getTodayKey();
+
+  for (let i = 0; i < startWeekday; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "calendar-cell empty";
+    calendarGridEl.appendChild(emptyCell);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const dateKey = formatDateKey(date);
+    const status = getDateStatus(dateKey);
+
+    const cell = document.createElement("div");
+    cell.className = "calendar-cell";
+
+    if (dateKey === todayKey) {
+      cell.classList.add("today");
+    }
+
+    const dayEl = document.createElement("div");
+    dayEl.className = "calendar-day";
+    dayEl.textContent = day;
+
+    const markEl = document.createElement("div");
+    markEl.className = "calendar-mark";
+
+    if (status === "success") {
+      markEl.textContent = "🛁";
+    } else if (status === "failure") {
+      markEl.textContent = "✕";
+    } else {
+      markEl.textContent = "";
+    }
+
+    cell.appendChild(dayEl);
+    cell.appendChild(markEl);
+    calendarGridEl.appendChild(cell);
+  }
+}
+
+function updateReward() {
+  const stock = getStampStock();
+  rewardStampStockEl.textContent = stock;
+
+  appData.settings.rewards.forEach((reward, index) => {
+    rewardNameTextEls[index].textContent = reward.name;
+    rewardCostTextEls[index].textContent = reward.cost;
+    exchangeButtons[index].disabled = stock < reward.cost;
+  });
+}
+
+function updateSettings() {
+  startTimeInput.value = appData.settings.startTime;
+  endTimeInput.value = appData.settings.endTime;
+
+  appData.settings.rewards.forEach((reward, index) => {
+    rewardNameInputs[index].value = reward.name;
+    rewardCostInputs[index].value = reward.cost;
+  });
+}
+
+function openRewardModal(rewardName) {
+  rewardModalText.textContent = `「${rewardName}」と交換しました！`;
+  rewardModalOverlay.classList.remove("hidden");
+}
+
+function closeRewardModal() {
+  rewardModalOverlay.classList.add("hidden");
+}
+
+function exchangeReward(index) {
+  const reward = appData.settings.rewards[index];
+  const stock = getStampStock();
+
+  if (stock < reward.cost) {
+    rewardMessageEl.textContent = "スタンプが足りません。";
+    return;
+  }
+
+  appData.spentBaselineSuccessCount = getTotalSuccessDays();
+  saveData();
+  rewardMessageEl.textContent = "";
+  renderAll();
+  openRewardModal(reward.name);
+}
+
+function saveSettings() {
+  const password = settingsPasswordInput.value;
+
+  if (password !== SETTINGS_PASSWORD) {
+    settingsMessageEl.textContent = "パスワードが違います。";
+    settingsPasswordInput.value = "";
+    return;
+  }
+
+  const startTime = startTimeInput.value;
+  const endTime = endTimeInput.value;
+
+  if (!startTime || !endTime) {
+    settingsMessageEl.textContent = "開始時刻と終了時刻を入力してください。";
+    return;
+  }
+
+  if (timeToMinutes(startTime) > timeToMinutes(endTime)) {
+    settingsMessageEl.textContent = "開始時刻は終了時刻より前にしてください。";
+    return;
+  }
+
+  const rewards = [];
+
+  for (let i = 0; i < 3; i++) {
+    const name = rewardNameInputs[i].value.trim();
+    const cost = Number(rewardCostInputs[i].value);
+
+    if (!name) {
+      settingsMessageEl.textContent = `ごほうび${i + 1}の名前を入力してください。`;
+      return;
+    }
+
+    if (!Number.isInteger(cost) || cost < 1) {
+      settingsMessageEl.textContent = `ごほうび${i + 1}の必要スタンプ数は1以上の整数にしてください。`;
+      return;
+    }
+
+    rewards.push({ name, cost });
+  }
+
+  appData.settings.startTime = startTime;
+  appData.settings.endTime = endTime;
+  appData.settings.rewards = rewards;
+
+  saveData();
+  reconcileSpentBaseline();
+  settingsPasswordInput.value = "";
+  settingsMessageEl.textContent = "設定を保存しました。";
+  renderAll();
+}
+
+function switchScreen(target) {
+  screens.forEach((screen) => {
+    screen.classList.remove("active");
+  });
+
+  navButtons.forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  document.getElementById(`screen-${target}`).classList.add("active");
+  document.querySelector(`.nav-button[data-target="${target}"]`).classList.add("active");
+}
+
+function renderAll() {
+  reconcileSpentBaseline();
+  updateHome();
+  renderCalendar();
+  updateReward();
+  updateSettings();
+}
+
+bathButton.addEventListener("click", recordBath);
+updateRecordTimeButton.addEventListener("click", updateTodayRecordTime);
+saveSettingsButton.addEventListener("click", saveSettings);
+
+exchangeButtons.forEach((button, index) => {
+  button.addEventListener("click", () => exchangeReward(index));
+});
+
+navButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    switchScreen(button.dataset.target);
+  });
+});
+
+prevMonthButton.addEventListener("click", () => {
+  calendarDate.setMonth(calendarDate.getMonth() - 1);
+  renderCalendar();
+});
+
+nextMonthButton.addEventListener("click", () => {
+  calendarDate.setMonth(calendarDate.getMonth() + 1);
+  renderCalendar();
+});
+
+rewardModalClose.addEventListener("click", closeRewardModal);
+
+rewardModalOverlay.addEventListener("click", (event) => {
+  if (event.target === rewardModalOverlay) {
+    closeRewardModal();
+  }
+});
+
+setInterval(() => {
+  renderAll();
+}, 30000);
+
+renderAll();
+switchScreen("home");
