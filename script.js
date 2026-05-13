@@ -1,4 +1,4 @@
-const STORAGE_KEY = "bath_stamp_app_data_v5";
+const STORAGE_KEY = "bath_stamp_app_data_v4";
 const SETTINGS_PASSWORD = "keyaei1226329";
 
 const defaultData = {
@@ -17,6 +17,7 @@ const defaultData = {
 
 let appData = loadData();
 let calendarDate = new Date();
+let editingDateKey = null;
 
 const screens = document.querySelectorAll(".screen");
 const navButtons = document.querySelectorAll(".nav-button");
@@ -30,9 +31,11 @@ const openEditModalButton = document.getElementById("open-edit-modal-button");
 const homeMessageEl = document.getElementById("home-message");
 
 const editModalOverlay = document.getElementById("edit-modal-overlay");
+const editModalDateText = document.getElementById("edit-modal-date-text");
 const editRecordTimeInput = document.getElementById("edit-record-time");
 const editRecordPasswordInput = document.getElementById("edit-record-password");
 const updateRecordTimeButton = document.getElementById("update-record-time-button");
+const deleteRecordButton = document.getElementById("delete-record-button");
 const closeEditModalButton = document.getElementById("close-edit-modal-button");
 
 const stampStockEl = document.getElementById("stamp-stock");
@@ -138,6 +141,11 @@ function formatDateKey(date) {
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 }
 
+function formatDateLabel(dateKey) {
+  const [y, m, d] = dateKey.split("-");
+  return `${y}/${m}/${d}`;
+}
+
 function getTodayKey() {
   return formatDateKey(new Date());
 }
@@ -186,7 +194,6 @@ function getDateStatus(dateKey) {
   if (dateKey === todayKey) {
     const nowMinutes = timeToMinutes(getCurrentTimeString());
     const endMinutes = timeToMinutes(appData.settings.endTime);
-
     if (nowMinutes > endMinutes) {
       return "failure";
     }
@@ -265,34 +272,26 @@ function recordBath() {
   renderAll();
 }
 
-function openEditModal() {
-  const todayRecord = getTodayRecord();
+function openEditModal(dateKey) {
+  editingDateKey = dateKey;
+  const record = getRecordForDate(dateKey);
 
-  if (!todayRecord) {
-    homeMessageEl.textContent = "今日はまだ記録がありません。";
-    return;
-  }
-
-  editRecordTimeInput.value = todayRecord.recordedAt;
+  editModalDateText.textContent = formatDateLabel(dateKey);
+  editRecordTimeInput.value = record?.recordedAt || "";
   editRecordPasswordInput.value = "";
   editModalOverlay.classList.remove("hidden");
 }
 
 function closeEditModal() {
+  editingDateKey = null;
   editModalOverlay.classList.add("hidden");
 }
 
-function updateTodayRecordTime() {
-  const todayKey = getTodayKey();
-  const todayRecord = getTodayRecord();
+function updateSelectedRecordTime() {
+  if (!editingDateKey) return;
+
   const newTime = editRecordTimeInput.value;
   const password = editRecordPasswordInput.value;
-
-  if (!todayRecord) {
-    homeMessageEl.textContent = "今日はまだ記録がありません。";
-    closeEditModal();
-    return;
-  }
 
   if (password !== SETTINGS_PASSWORD) {
     homeMessageEl.textContent = "修正用パスワードが違います。";
@@ -301,14 +300,34 @@ function updateTodayRecordTime() {
   }
 
   if (!newTime) {
-    homeMessageEl.textContent = "修正する時間を入力してください。";
+    homeMessageEl.textContent = "登録時間を入力してください。";
     return;
   }
 
-  appData.records[todayKey].recordedAt = newTime;
-  saveData();
+  appData.records[editingDateKey] = {
+    recordedAt: newTime
+  };
 
-  homeMessageEl.textContent = `登録時間を ${newTime} に修正しました。`;
+  saveData();
+  homeMessageEl.textContent = `${formatDateLabel(editingDateKey)} の登録時間を ${newTime} に修正しました。`;
+  closeEditModal();
+  renderAll();
+}
+
+function deleteSelectedRecord() {
+  if (!editingDateKey) return;
+
+  const password = editRecordPasswordInput.value;
+
+  if (password !== SETTINGS_PASSWORD) {
+    homeMessageEl.textContent = "修正用パスワードが違います。";
+    editRecordPasswordInput.value = "";
+    return;
+  }
+
+  delete appData.records[editingDateKey];
+  saveData();
+  homeMessageEl.textContent = `${formatDateLabel(editingDateKey)} の記録を削除しました。`;
   closeEditModal();
   renderAll();
 }
@@ -375,7 +394,8 @@ function renderCalendar() {
     const dateKey = formatDateKey(date);
     const status = getDateStatus(dateKey);
 
-    const cell = document.createElement("div");
+    const cell = document.createElement("button");
+    cell.type = "button";
     cell.className = "calendar-cell";
 
     if (dateKey === todayKey) {
@@ -399,6 +419,11 @@ function renderCalendar() {
 
     cell.appendChild(dayEl);
     cell.appendChild(markEl);
+
+    cell.addEventListener("click", () => {
+      openEditModal(dateKey);
+    });
+
     calendarGridEl.appendChild(cell);
   }
 }
@@ -523,8 +548,9 @@ function renderAll() {
 }
 
 bathButton.addEventListener("click", recordBath);
-openEditModalButton.addEventListener("click", openEditModal);
-updateRecordTimeButton.addEventListener("click", updateTodayRecordTime);
+openEditModalButton.addEventListener("click", () => openEditModal(getTodayKey()));
+updateRecordTimeButton.addEventListener("click", updateSelectedRecordTime);
+deleteRecordButton.addEventListener("click", deleteSelectedRecord);
 closeEditModalButton.addEventListener("click", closeEditModal);
 saveSettingsButton.addEventListener("click", saveSettings);
 
