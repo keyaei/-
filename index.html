@@ -20,7 +20,15 @@
           <p>現在時刻: <span id="current-time">--:--</span></p>
           <p>今日の状態: <strong id="today-status-text">未記録</strong></p>
           <p>記録時刻: <span id="today-recorded-time">-</span></p>
+
           <button id="bath-button" class="primary-button">おふろに入った！</button>
+
+          <div id="edit-record-area" class="edit-record-area hidden">
+            <label for="edit-record-time">登録時間を修正</label>
+            <input type="time" id="edit-record-time" />
+            <button id="update-record-time-button" class="secondary-button">登録時間を更新する</button>
+          </div>
+
           <p id="home-message" class="message"></p>
         </div>
 
@@ -36,116 +44,4 @@
       <section id="screen-calendar" class="screen">
         <div class="card">
           <div class="calendar-header">
-            <button id="prev-month-button" class="small-button">←</button>
-            <h2 id="calendar-title">2026年4月</h2>
-            <button id="next-month-button" class="small-button">→</button>
-          </div>
-
-          <div class="calendar-weekdays">
-            <div>日</div>
-            <div>月</div>
-            <div>火</div>
-            <div>水</div>
-            <div>木</div>
-            <div>金</div>
-            <div>土</div>
-          </div>
-
-          <div id="calendar-grid" class="calendar-grid"></div>
-
-          <div class="legend">
-            <span>🛁 達成</span>
-            <span>✕ 失敗</span>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-reward" class="screen">
-        <div class="card">
-          <h2>ごほうび交換</h2>
-          <p>所持スタンプ: <strong id="reward-stamp-stock">0</strong> 個</p>
-
-          <div class="reward-item">
-            <h3 id="reward1-name-text">コンビニスイーツ</h3>
-            <p>必要スタンプ: <strong id="reward1-cost-text">10</strong> 個</p>
-            <button id="exchange-button-1" class="primary-button">これに交換する</button>
-          </div>
-
-          <div class="reward-item">
-            <h3 id="reward2-name-text">カフェドリンク</h3>
-            <p>必要スタンプ: <strong id="reward2-cost-text">20</strong> 個</p>
-            <button id="exchange-button-2" class="primary-button">これに交換する</button>
-          </div>
-
-          <div class="reward-item">
-            <h3 id="reward3-name-text">ちょっと良いごはん</h3>
-            <p>必要スタンプ: <strong id="reward3-cost-text">30</strong> 個</p>
-            <button id="exchange-button-3" class="primary-button">これに交換する</button>
-          </div>
-
-          <p id="reward-message" class="message"></p>
-        </div>
-      </section>
-
-      <section id="screen-settings" class="screen">
-        <div class="card">
-          <h2>設定</h2>
-
-          <label for="start-time">開始時刻</label>
-          <input type="time" id="start-time" />
-
-          <label for="end-time">終了時刻</label>
-          <input type="time" id="end-time" />
-
-          <hr class="divider" />
-
-          <label for="reward1-name">ごほうび1の名前</label>
-          <input type="text" id="reward1-name" />
-          <label for="reward1-cost">ごほうび1の必要スタンプ</label>
-          <input type="number" id="reward1-cost" min="1" />
-
-          <label for="reward2-name">ごほうび2の名前</label>
-          <input type="text" id="reward2-name" />
-          <label for="reward2-cost">ごほうび2の必要スタンプ</label>
-          <input type="number" id="reward2-cost" min="1" />
-
-          <label for="reward3-name">ごほうび3の名前</label>
-          <input type="text" id="reward3-name" />
-          <label for="reward3-cost">ごほうび3の必要スタンプ</label>
-          <input type="number" id="reward3-cost" min="1" />
-
-          <hr class="divider" />
-
-          <label for="settings-password">設定変更パスワード</label>
-          <input
-            type="password"
-            id="settings-password"
-            placeholder="パスワードを入力"
-            autocomplete="off"
-          />
-
-          <button id="save-settings-button" class="primary-button">保存</button>
-          <p id="settings-message" class="message"></p>
-        </div>
-      </section>
-    </main>
-
-    <nav class="bottom-nav">
-      <button class="nav-button active" data-target="home">ホーム</button>
-      <button class="nav-button" data-target="calendar">カレンダー</button>
-      <button class="nav-button" data-target="reward">ごほうび</button>
-      <button class="nav-button" data-target="settings">設定</button>
-    </nav>
-  </div>
-
-  <div id="reward-modal-overlay" class="modal-overlay hidden">
-    <div class="modal-card">
-      <h2>交換完了！</h2>
-      <p id="reward-modal-text">「コンビニスイーツ」と交換しました！</p>
-      <button id="reward-modal-close" class="primary-button modal-button">OK</button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
+            <button id="prev-month-button" class="small-button">
