@@ -70,6 +70,7 @@ label {
   margin-top: 12px;
   margin-bottom: 6px;
   font-weight: 600;
+  text-align: left;
 }
 
 input[type="time"],
@@ -88,7 +89,8 @@ input[type="password"] {
 .secondary-button,
 .small-button,
 .nav-button,
-.mini-edit-button {
+.mini-edit-button,
+.danger-button {
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -113,8 +115,18 @@ input[type="password"] {
   font-weight: 700;
 }
 
+.danger-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .primary-button:disabled,
-.secondary-button:disabled {
+.secondary-button:disabled,
+.danger-button:disabled {
   background: #cbd5e1;
   color: #6b7280;
   cursor: not-allowed;
@@ -232,11 +244,13 @@ input[type="password"] {
   align-items: center;
   justify-content: flex-start;
   border: 1px solid #eceff3;
+  cursor: pointer;
 }
 
 .calendar-cell.empty {
   background: transparent;
   border: none;
+  cursor: default;
 }
 
 .calendar-day {
@@ -259,6 +273,7 @@ input[type="password"] {
   margin-top: 16px;
   font-size: 14px;
   color: #4b5563;
+  flex-wrap: wrap;
 }
 
 .modal-overlay {
@@ -287,7 +302,7 @@ input[type="password"] {
 }
 
 .modal-card h2 {
-  margin: 0 0 14px;
+  margin: 0 0 6px;
   font-size: 22px;
 }
 
@@ -296,6 +311,12 @@ input[type="password"] {
   font-size: 16px;
   line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.modal-subtext {
+  margin-bottom: 8px !important;
+  color: #6b7280;
+  font-size: 14px !important;
 }
 
 .modal-button {
