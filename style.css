@@ -87,7 +87,8 @@ input[type="password"] {
 .primary-button,
 .secondary-button,
 .small-button,
-.nav-button {
+.nav-button,
+.mini-edit-button {
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -152,14 +153,25 @@ input[type="password"] {
   margin: 20px 0 12px;
 }
 
-.edit-record-area {
-  margin-top: 16px;
-  padding-top: 8px;
-  border-top: 1px solid #eceff3;
-}
-
 .hidden {
   display: none !important;
+}
+
+.bath-action-wrap {
+  position: relative;
+  margin-top: 12px;
+}
+
+.mini-edit-button {
+  position: absolute;
+  right: 10px;
+  bottom: -10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: #e5e7eb;
+  color: #111827;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .bottom-nav {
@@ -288,4 +300,8 @@ input[type="password"] {
 
 .modal-button {
   margin-top: 20px;
+}
+
+.modal-sub-button {
+  margin-top: 10px;
 }
